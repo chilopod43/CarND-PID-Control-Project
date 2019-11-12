@@ -37,6 +37,70 @@ Fellow students have put together a guide to Windows set-up for the project [her
 
 Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
 
+## Reflections
+
+### Describe the effect each of the P, I, D components had in your implementation.
+
+The P control moves the car to the center of the road. The I control tries to remove the residual deviation that occurs in the P control and keep it at the center of the road.　The D control increases the feedback gain when the CTE value suddenly increases such as a curve. Using the above effects, I completed the course without course out.
+
+
+### Describe how the final hyperparameters were chosen.
+
+I tuneed the PID parameters using the step response method. In the method, I plotted the correspondence between CTE and steer_value when the steering value is changed from 0 to 1 in a short time. In my code, after 100 steps from the start of simulation, the value of steer_value was changed from 0 to 1. To test the step response, set impluse_ = true in the Init function of the PID class.
+
+I saved the plot data in CSV format and tuned the PID parameters with matlab.
+The plot data and the matlab script are described below.
+
+plot data
+```
+
+0,0.76
+0,0.76
+0,0.7599
+...
+
+0,0.8905
+0,0.9066
+1,0.9175
+1,0.9342
+...
+
+1,8.2985
+1,8.4681
+```
+
+matlab scripts
+1. stepd=csvread('./res/step_input_output.csv')
+2. us=stepd(:,1)
+3. ys=stepd(:,2)
+4. Ts=0.06
+5. plant_data = iddata(ys, us, Ts)
+6. plant_data_detrended = detrend(plant_data)
+7. plant = ssest(plant_data_detrended, 2)
+8. pidTuner(plant(or mtf), 'PID')
+
+First, I read plot data, and set the input value "us" (steer_value) and the output value "ys" (CTE) (1-3).
+Also, I defined the loop interval time as Ts (0.06 msec) from the actual measurement value (4).
+Next, the car has a slight leftward curve at the start, so there is a trend in CTE values.
+I remove the trend using [detrend function] (https://jp.mathworks.com/help/matlab/ref/timeseries.detrend.html) (5-6).
+Finally, the system is identified as a quadratic linear model and I tuned the PID parameters (7-8).
+I used [ssest function] (https://www.mathworks.com/help/ident/ref/ssest.html) to estimate this state model.
+In the PID parameter tuning, the following screen is displayed and I can tuned PID parameters.
+
+![step_input_output.csv](./res/step_input_output.csv "step_input_output.csv")
+
+First, I tried the default PID paramters, but the vehicle swing slightly at full speed. This is because the step response was measured at 6.5 mph, and the CTE sensitivity to the steer_value is high when the top speed. For this reason, the tracking performance of the PID tuner was slightly reduced (D value was reduced) to suppress swinging. The tuned parameters are described below.
+
+- Parameter(1st try)
+  * Kp = 0.302186592187861
+  * Ki = 0.001258975213386
+  * Kd = 0.968850913467322
+- Parameter(Tuned)
+  * Kp = 0.302284051053023
+  * Ki = 0.001357177163598
+  * Kd = 0.619445128276012
+
+
 ## Editor Settings
 
 We've purposefully kept editor configuration files out of this repo in order to

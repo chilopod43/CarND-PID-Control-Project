@@ -4,6 +4,7 @@
 #include <string>
 #include "json.hpp"
 #include "PID.h"
+#include <chrono>
 
 // for convenience
 using nlohmann::json;
@@ -34,11 +35,19 @@ int main() {
   uWS::Hub h;
 
   PID pid;
-  /**
-   * TODO: Initialize the pid variable.
-   */
-
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+  // parameter for 6.5mph
+  //auto Kp = 0.302186592187861;
+  //auto Ki = 0.001258975213386;
+  //auto Kd = 0.968850913467322;
+  
+  auto Kp = 0.302284051053023;
+  auto Ki = 0.001357177163598;
+  auto Kd = 0.619445128276012;
+  
+  pid.Init(Kp, Ki, Kd, false);
+  auto start_time = std::chrono::system_clock::now();
+          
+  h.onMessage([&pid, &start_time](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -56,17 +65,21 @@ int main() {
           double cte = std::stod(j[1]["cte"].get<string>());
           double speed = std::stod(j[1]["speed"].get<string>());
           double angle = std::stod(j[1]["steering_angle"].get<string>());
-          double steer_value;
+          double steer_value = 0.0;
           /**
            * TODO: Calculate steering value here, remember the steering value is
            *   [-1, 1].
            * NOTE: Feel free to play around with the throttle and speed.
            *   Maybe use another PID controller to control the speed!
            */
+          auto curr_time = std::chrono::system_clock::now();
+          auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(curr_time - start_time).count() / 1000.0;
+          pid.UpdateError(cte, elapsed_time);
+          steer_value += pid.TotalError();
           
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value 
-                    << std::endl;
+                    << " Time: " << elapsed_time << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
