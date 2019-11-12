@@ -87,7 +87,7 @@ Finally, the system is identified as a quadratic linear model and I tuned the PI
 I used [ssest function] (https://www.mathworks.com/help/ident/ref/ssest.html) to estimate this state model.
 In the PID parameter tuning, the following screen is displayed and I can tuned PID parameters.
 
-![step_input_output.csv](./res/step_input_output.csv "step_input_output.csv")
+![pidtune.bmp](./res/pidtune.bmp "pidtune.bmp")
 
 First, I tried the default PID paramters, but the vehicle swing slightly at full speed. This is because the step response was measured at 6.5 mph, and the CTE sensitivity to the steer_value is high when the top speed. For this reason, the tracking performance of the PID tuner was slightly reduced (D value was reduced) to suppress swinging. The tuned parameters are described below.
 
